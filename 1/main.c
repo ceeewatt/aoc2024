@@ -13,7 +13,8 @@
 *    each pair.
 *   Start by parsing the input file and saving it to a buffer.
 *    I'm using a dynamically-sized buffer because the input file
-*    could potentially have any length of data.
+*    could potentially have any length of data (in hindsight,
+*    this is way overkill).
 *   Then, sort each column of the data in ascending order. For
 *    this, I'm using the standard library function `qsort`. By
 *    sorting both columns, the pairs are already created. Now,

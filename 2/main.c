@@ -6,7 +6,29 @@
 *   Part One:
 *   The input file consists of many reports. Each row of data
 *    is a report. Each report contains a list of numbers called
-*    levels.
+*    levels. Our goal is to determine how many reports are safe.
+*    A report is considered safe if:
+*    - Levels are either in ascending or descending order.
+*    - Any two adjacent levels differ by at least one and at most
+*       three.
+*   This part is simple enough to implement as it just requires
+*    looping over each report and checking the levels against
+*    the "safe" criteria. To determine whether the levels are
+*    safe, I'm computing the "diff" on each `level` array, which
+*    calculates the difference between adjacent elements.
+*
+*   Part Two:
+*   Using the same input file and criteria outlined above, we
+*    now want to recalculate the number of safe reports with
+*    an additional criterion: a report can now tolerate a
+*    single bad level. In other words, if a report can meet
+*    the Part One criteria by having a single level removed,
+*    it is now considered safe.
+*   My implementation for this second part is not elegant. I
+*    was running low on time, so I decided to brute force my
+*    way to solution by taking the most obvious approach: for
+*    any unsafe report, rerun the safety check after
+*    sequentially removing one level from the array.
 */
 
 #include <stdio.h>
@@ -22,6 +44,8 @@ struct report {
   int num_levels;
 };
 
+// Return true if the levels contained with the report
+//  meet the criteria laid out in Part One.
 bool report_is_safe(const struct report *report);
 
 // Given input array `in` containing `size` elements,
@@ -34,12 +58,14 @@ bool report_is_safe(const struct report *report);
 //  array.
 void diff(const int *in, int size, int * const out);
 
-void remove_level(struct report *in, struct report *out, int idx);
+// Remove a level at index `idx` from report `in` and place
+//  the new level data in the report `out`.
+void remove_level(const struct report *in, struct report *out, int idx);
 
 int main(int argc, char *argv[])
 {
   if (argc < 2) {
-    printf("Missing file name in second argument position ");
+    printf("Missing file name in second argument position\n");
     return EXIT_FAILURE;
   }
 
@@ -58,6 +84,12 @@ int main(int argc, char *argv[])
   char *token;
   int num_reports = 0;
   int level_idx = 0;
+
+  // Our input data consists of spaced-delimited numbers
+  //  organized into rows called reports. Sequentially
+  //  read each line of the file and split each line into
+  //  token using `strtok()`. Convert each token into an
+  //  integer and save the level into the report.
   while (fgets(line, sizeof(line), f)) {
     token = strtok(line, " ");
     while (token) {
@@ -72,10 +104,15 @@ int main(int argc, char *argv[])
   int safe_count = 0;
   bool enable_dampener = true;
   struct report temp;
+
+  // Sequentially examine each report to determine if it's
+  //  safe or not. If the dampener is enabled (Part Two),
+  //  re-examine each unsafe report by checking if the
+  //  report can be considered safe if a single level is
+  //  removed.
   for (int i = 0; i < num_reports; i++) {
     if (report_is_safe(&report[i])) {
       safe_count++;
-      //printf("Report #%d: safe\n", i);
     }
     else if (enable_dampener) {
       for (int l = 0; l < report[i].num_levels; l++) {
@@ -83,12 +120,9 @@ int main(int argc, char *argv[])
 
         if (report_is_safe(&temp)) {
           safe_count++;
-          //printf("Report #%d: safe with dampener\n", i);
           break;
         }
       }
-
-
     }
   }
 
@@ -135,7 +169,7 @@ void diff(const int *in, int size, int * const out)
   }
 }
 
-void remove_level(struct report *in, struct report *out, int idx)
+void remove_level(const struct report *in, struct report *out, int idx)
 {
   int idx_new = 0;
 
